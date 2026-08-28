@@ -16,7 +16,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import torch
 from transformers import Qwen2AudioForConditionalGeneration, AutoProcessor, BitsAndBytesConfig
 
-from phase4_fit_asr import (
+from phase4_fit import (
     Qwen2AudioLensModel,
     load_jsonl_lines,
     filter_by_length,
@@ -28,11 +28,10 @@ def main():
     
     # 全部換成相對路徑，並改為透過終端機參數接收
     parser.add_argument("--data-root", default="g_data")
-    parser.add_argument("--jsonl-name", default="jlens_dataset_mixed/prompts.jsonl")
+    parser.add_argument("--jsonl-name", required=True, help="訓練使用的 JSONL : --jsonl-name")
     parser.add_argument("--model-name", default="Qwen/Qwen2-Audio-7B-Instruct")
-    parser.add_argument("--checkpoint-path", default="checkpoints/phase4_mixed_lens.ckpt")
-    parser.add_argument("--output-path", default="checkpoints/phase4_mixed_lens.pt")
-    
+    parser.add_argument("--checkpoint-path", required=True, help="要讀取的 ckpt : --checkpoint-path")
+    parser.add_argument("--output-path", required=True, help="輸出的 pt : --output-path")
     parser.add_argument("--dim-batch", type=int, default=4)
     parser.add_argument("--max-seq-len", type=int, default=300)
     args = parser.parse_args()

@@ -7,7 +7,7 @@ from transformers import Qwen2AudioForConditionalGeneration, AutoProcessor, Bits
 from jlens import JacobianLens
 
 # 直接從同目錄下的 phase4 匯入 Adapter
-from phase4_fit_asr import Qwen2AudioLensModel
+from phase4_fit import Qwen2AudioLensModel
 
 os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
 
@@ -99,11 +99,12 @@ def print_and_format_stats(title, stats, layers):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--model-name", default="Qwen/Qwen2-Audio-7B-Instruct")
-    parser.add_argument("--lens-path", default="checkpoints/phase4_asr_lens.pt")
+    parser.add_argument("--lens-path", required=True, help="要評估的 J-Lens pt : --lens-path")
+    parser.add_argument("--out-json", required=True, help="輸出路徑 : --out-json")
     parser.add_argument("--asr-jsonl", default="g_data/jlens_val_dataset/val_prompts_asr.jsonl")
     parser.add_argument("--qa-jsonl", default="g_data/jlens_val_dataset/val_prompts_qa.jsonl")
-    parser.add_argument("--out-json", default="outputs/phase6/phase6_validation_results.json")
     parser.add_argument("--max-seq-len", type=int, default=1024) 
+    parser.add_argument("--data-root", default="g_data")
     args = parser.parse_args()
 
     logger.info("載入 Qwen2-Audio 7B 模型 (4-bit)...")
@@ -124,7 +125,7 @@ def main():
     # 🚀 data_root 也換成絕對路徑！
     adapter = Qwen2AudioLensModel(
         full_model, processor, 
-        data_root=os.path.expanduser("~/jacobian-lens/g_data"), 
+        data_root=args.data_root,
         device="cuda", model_dtype=torch.bfloat16
     )
     

@@ -1,27 +1,38 @@
+import os
 import json
+import argparse
 import matplotlib.pyplot as plt
 
-# ==========================================
-# 參數設定
-# ==========================================
-JSON_PATH = "phase6_validation_results.json"
-OUTPUT_IMAGE = "jlens_results_plot.png"
-
 def main():
-    print(f"📊 正在讀取 {JSON_PATH}...")
+    # ==========================================
+    # 參數設定 (Argparse)
+    # ==========================================
+    parser = argparse.ArgumentParser(description="繪製 J-Lens 評估結果折線圖")
+    parser.add_argument("--json-path", required=True, help="輸入的評估結果 JSON 檔案路徑")
+    parser.add_argument("--output-image", required=True, help="輸出的圖表圖片路徑 (例如: .png)")
+    args = parser.parse_args()
+
+    print(f"📊 正在讀取 {args.json_path}...")
     try:
-        with open(JSON_PATH, 'r', encoding='utf-8') as f:
+        with open(args.json_path, 'r', encoding='utf-8') as f:
             data = json.load(f)
     except FileNotFoundError:
-        print(f"❌ 找不到檔案 {JSON_PATH}，請確認是否在正確的目錄執行！")
+        print(f"❌ 找不到檔案 {args.json_path}，請確認是否在正確的目錄執行！")
         return
+
+    # 取得單純的檔案名稱 (例如 phase6_mixed_results.json)
+    filename = os.path.basename(args.json_path)
 
     # 設定畫布大小 (寬 18 吋, 高 5 吋)，1 橫排 3 直排
     fig, axes = plt.subplots(1, 3, figsize=(18, 5))
-    fig.suptitle('J-Lens vs Baseline (Logit Lens) Accuracy per Layer', fontsize=18, fontweight='bold', y=1.05)
+    
+    # 將檔名動態加入主標題中
+    fig.suptitle(f'J-Lens vs Baseline Accuracy per Layer\n(Data: {filename})', 
+                 fontsize=16, fontweight='bold', y=1.08)
 
+    # 修改：拿掉 Zero-Shot 等不適用的字眼，保持純粹的任務名稱
     tasks = ['ASR', 'QA', 'Combined']
-    titles = ['ASR (Length Generalization)', 'QA (Zero-Shot Environmental)', 'Combined Performance']
+    titles = ['ASR Performance', 'QA Performance', 'Combined Performance']
 
     for i, task in enumerate(tasks):
         if task not in data:
@@ -38,7 +49,7 @@ def main():
         # 繪製 J-Lens (藍色實線 + 圓點)
         ax.plot(layers, jlens_acc, label='J-Lens', color='#1f77b4', linewidth=2.5, marker='o', markersize=5)
         # 繪製 Baseline (紅色虛線 + 叉叉)
-        ax.plot(layers, baseline_acc, label='Baseline (Logit Lens)', color='#d62728', linewidth=2.5, linestyle='--', marker='x', markersize=5)
+        ax.plot(layers, baseline_acc, label='Baseline', color='#d62728', linewidth=2.5, linestyle='--', marker='x', markersize=5)
         
         # 設定標題與軸標籤
         ax.set_title(titles[i], fontsize=14, pad=10)
@@ -51,14 +62,14 @@ def main():
         ax.set_xlim(0, 30)
         ax.set_xticks(range(0, 31, 5))
         
-        # 增加網格線 (更有學術感)
+        # 增加網格線
         ax.grid(True, linestyle=':', alpha=0.7)
         ax.legend(fontsize=11, loc='upper left')
 
     # 自動調整排版並存檔
     plt.tight_layout()
-    plt.savefig(OUTPUT_IMAGE, dpi=300, bbox_inches='tight')
-    print(f"🎉 繪圖完成！折線圖已成功儲存為: {OUTPUT_IMAGE}")
+    plt.savefig(args.output_image, dpi=300, bbox_inches='tight')
+    print(f"🎉 繪圖完成！折線圖已成功儲存為: {args.output_image}")
 
 if __name__ == "__main__":
     main()

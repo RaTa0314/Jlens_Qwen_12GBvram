@@ -262,11 +262,10 @@ def main():
     # 1. 直接改成相對路徑 "g_data"
     parser.add_argument("--data-root", default="g_data",
                         help="工作目錄，內含 jlens_dataset/prompts.jsonl 與 jlens_dataset/audio/")
-    parser.add_argument("--jsonl-name", default="jlens_dataset/prompts.jsonl")
+    parser.add_argument("--jsonl-name", required=True, help="輸入的 JSONL : --jsonl-name")
     parser.add_argument("--model-name", default="Qwen/Qwen2-Audio-7B-Instruct")
     # 2. 直接改成相對路徑 "checkpoints/..."
-    parser.add_argument("--checkpoint-path",
-                        default="checkpoints/phase4_asr.ckpt")
+    parser.add_argument("--checkpoint-path", required=True, help="輸出的 ckpt : --checkpoint-path")
     parser.add_argument("--dim-batch", type=int, default=4)
     parser.add_argument("--max-seq-len", type=int, default=300)
     parser.add_argument("--device", default="cuda")
