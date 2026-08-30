@@ -122,13 +122,19 @@ class Qwen2AudioLensModel:
         record = json.loads(json_line)
         audio_path = os.path.join(self._data_root, record["audio_path"])
         prompt = record["prompt"]
-        transcript = record["transcript"]
+        # 🚀 動態支援 ASR (transcript) 與 QA (answer/target)
+        target_text = record.get("transcript") or record.get("category") or record.get("answer") or record.get("target")
+        if not target_text:
+            raise KeyError(
+                f"樣本 {record.get('id', '<unknown>')} 找不到任何已知的目標文字欄位 "
+                f"(transcript/category/answer/target)，實際欄位有: {list(record.keys())}"
+            )
 
         # 5 秒以內的音訊，載入成本不高，直接同步讀取即可
         audio_array, _ = librosa.load(audio_path, sr=self._sampling_rate)
 
-        # prompt 內含 <|AUDIO|> 佔位符；transcript 接在後面做 teacher forcing 目標
-        full_text = prompt + transcript
+        # prompt 內含 <|AUDIO|> 佔位符；target_text 接在後面做 teacher forcing 目標
+        full_text = prompt + target_text
 
     # 1. 保持最乾淨的 Processor 呼叫（不加任何 padding，保護文字長度）
         inputs = self._processor(
@@ -227,7 +233,15 @@ def filter_by_length(records, processor, data_root: str, sampling_rate: int, max
         record = json.loads(line)
         audio_path = os.path.join(data_root, record["audio_path"])
         audio_array, _ = librosa.load(audio_path, sr=sampling_rate)
-        full_text = record["prompt"] + record["transcript"]
+        
+        # 🚀 同樣補上動態支援
+        target_text = record.get("transcript") or record.get("category") or record.get("answer") or record.get("target")
+        if not target_text:
+            raise KeyError(
+                f"樣本 {record.get('id', '<unknown>')} 找不到任何已知的目標文字欄位 "
+                f"(transcript/category/answer/target)，實際欄位有: {list(record.keys())}"
+            )
+        full_text = record["prompt"] + target_text
 
         # 不 pad、不截斷，純粹拿到真實 token 長度
         inputs = processor(
